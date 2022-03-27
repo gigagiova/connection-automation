@@ -1,10 +1,14 @@
 import time
+import re
 
 from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.common.by import By
 
+from assets import fb_connection
+from driver import driver
 
-def login(driver):
+
+def login():
     """Login into facebook"""
 
     driver.get("https://www.facebook.com/")
@@ -21,7 +25,7 @@ def login(driver):
     time.sleep(2)
 
 
-def scroll_down(driver):
+def scroll_down():
     """A method for scrolling the page."""
 
     # Get scroll height.
@@ -45,7 +49,6 @@ def scroll_down(driver):
             for t in range(8):
                 time.sleep(1)
                 new_height = driver.execute_script("return document.body.scrollHeight")
-                print(f'{last_height} == {new_height}')
                 if last_height != new_height:
                     break
 
@@ -55,26 +58,41 @@ def scroll_down(driver):
         last_height = new_height
 
 
-def sendMessage(receiver, driver):
+def sendMessage(receiver, group_name):
     """
     ARGS
         receiver: URL string of receiver's FB account
-        driver: self explanatory unless you are FB
     """
-
-    text = f"""Ciao! Ho trovato il tuo profilo su .Assieme a dei miei amici developer vogliamo aiutare i gamer a migliorare le loro skills e diventare pro.
-            Sarebbe molto utile per noi poterti fare qualche domanda per capire le difficoltà che i gamer incontrano ed elaborare una giusta soluzione.
-            Qual'è il momento migliore in cui potremmo sentirci per una breve intervista informale?"""
 
     # connect to page
     driver.get(receiver)
     actions = ActionChains(driver)
 
+    # get all buttons that contain the word message
+    message_buttons = driver.find_elements(By.XPATH, "//span[contains(text(), 'Messaggio')]")
+    if len(message_buttons) == 0:
+        # probably our own profile
+        return
+
     # click on message form
-    driver.find_elements(By.XPATH, "//span[contains(text(), 'Messaggio')]")[0].find_element(By.XPATH, '../..').click()
+    message_buttons[0].find_element(By.XPATH, '../..').click()
+    time.sleep(6)
 
     # send message
-    actions.send_keys(text)
+    actions.send_keys(fb_connection(group_name))
     actions.perform()
     actions.send_keys(Keys.ENTER)
     actions.perform()
+
+
+def scrapeGroup(url, name):
+
+    driver.get(url)
+    scroll_down()
+
+    r = re.compile(r'https://www.facebook.com/groups/\d+/user/\d+/')
+    anchors = map(lambda a: str(a.get_attribute("href")), driver.find_elements(By.TAG_NAME, "a"))
+    profiles = set([a for a in anchors if r.match(a)])
+
+    for p in profiles:
+        sendMessage(p, name)
