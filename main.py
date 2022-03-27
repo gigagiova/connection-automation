@@ -1,22 +1,24 @@
+import re
 import time
 
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 
-from FB import Login
+from FB import login, scroll_down
 from options import options
 
-driver = webdriver.Chrome(executable_path="C:/utility/chromedriver_win32/chromedriver.exe", options=options)
+driver = webdriver.Chrome(service=Service("C:/utility/chromedriver_win32/chromedriver.exe"), options=options)
 
-Login(driver)
+login(driver)
 
-driver.get("https://www.facebook.com/groups/368096750277850")
+driver.get("https://www.facebook.com/groups/319516465411062/members")
 
-driver.implicitly_wait(5)
-members = driver.find_elements(By.XPATH, "//span[contains(text(), 'Persone')]")
-driver.implicitly_wait(2)
-members[1].find_element(By.XPATH, '../..').click()
-time.sleep(2)
+scroll_down(driver)
 
-members = map(lambda a: a.get_attribute("href"), set(driver.find_elements(By.TAG_NAME, "a")))
+r = re.compile(r'https://www.facebook.com/groups/\d+/user/\d+/')
+anchors = map(lambda a: str(a.get_attribute("href")), driver.find_elements(By.TAG_NAME, "a"))
+profiles = set([a for a in anchors if r.match(a)])
 
+for a in profiles:
+    print(a)
