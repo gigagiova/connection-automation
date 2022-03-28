@@ -58,11 +58,19 @@ def scroll_down():
         last_height = new_height
 
 
-def sendMessage(receiver, group_name):
+def send_message(receiver, group_name, history):
     """
     ARGS
         receiver: URL string of receiver's FB account
     """
+
+    history.seek(0)
+    uuids = history.read().splitlines()
+    uuid = receiver.split("/")[-2]
+
+    if uuid in uuids:
+        # we already sent a message
+        return
 
     # connect to page
     driver.get(receiver)
@@ -76,7 +84,7 @@ def sendMessage(receiver, group_name):
 
     # click on message form
     message_buttons[0].find_element(By.XPATH, '../..').click()
-    time.sleep(6)
+    time.sleep(8)
 
     # send message
     actions.send_keys(fb_connection(group_name))
@@ -84,8 +92,11 @@ def sendMessage(receiver, group_name):
     actions.send_keys(Keys.ENTER)
     actions.perform()
 
+    # save uuid
+    history.write(uuid+"\n")
 
-def scrapeGroup(url, name):
+
+def scrape_group(url, group_name):
 
     driver.get(url)
     scroll_down()
@@ -93,6 +104,11 @@ def scrapeGroup(url, name):
     r = re.compile(r'https://www.facebook.com/groups/\d+/user/\d+/')
     anchors = map(lambda a: str(a.get_attribute("href")), driver.find_elements(By.TAG_NAME, "a"))
     profiles = set([a for a in anchors if r.match(a)])
+    print(f"Found {len(profiles)} profiles")
 
+    history = open("history.txt", "a+")
     for p in profiles:
-        sendMessage(p, name)
+        send_message(p, group_name, history)
+
+    history.close()
+

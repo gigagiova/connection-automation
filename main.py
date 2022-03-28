@@ -1,11 +1,5 @@
-import re
-
-from selenium.webdriver.common.by import By
-
-from FB import login, scroll_down, sendMessage, scrapeGroup
-from driver import driver
+from FB import login, scrape_group
 
 login()
 
-
-scrapeGroup("https://www.facebook.com/groups/279412284353127/members", "gg")
+scrape_group("https://www.facebook.com/groups/leagueoflegendsitalianfamily/members", "League of Legends Italia Family")
