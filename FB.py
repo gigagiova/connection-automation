@@ -60,11 +60,9 @@ def scroll_down():
             for t in range(8):
                 time.sleep(1)
                 new_height = driver.execute_script("return document.body.scrollHeight")
-                if last_height != new_height:
-                    break
+                if last_height != new_height: break
 
-            if last_height == new_height:
-                break
+            if last_height == new_height: break
 
         last_height = new_height
 
@@ -79,9 +77,8 @@ def send_message(receiver, group_name, history):
     uuids = history.read().splitlines()
     uuid = receiver.split("/")[-2]
 
-    if uuid in uuids:
-        # we already sent a message
-        return
+    # check if we already sent a message
+    if uuid in uuids: return
 
     # connect to page
     driver.get(receiver)
@@ -89,9 +86,9 @@ def send_message(receiver, group_name, history):
 
     # get all buttons that contain the word message
     message_buttons = driver.find_elements(By.XPATH, "//span[contains(text(), 'Messaggio')]")
-    if len(message_buttons) == 0:
-        # probably our own profile
-        return
+
+    # You can't send messages to your own profile
+    if len(message_buttons) == 0: return
 
     # click on message form
     message_buttons[0].find_element(By.XPATH, '../..').click()
@@ -117,8 +114,7 @@ def scrape_group(url, group_name):
     print(f"Found {len(profiles)} profiles")
 
     history = open("persistent/history.txt", "a+")
-    for p in profiles:
-        send_message(p, group_name, history)
+    for p in profiles: send_message(p, group_name, history)
 
     history.close()
 

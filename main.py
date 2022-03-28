@@ -7,8 +7,8 @@ print("Commands \ngroup: scrape a fb group\nquit: quit execution")
 while True:
     command = input()
 
-    if command == "quit":
-        break
+    if command == "quit": break
+    
     elif command == "group":
         link = input("Write group link")
 
