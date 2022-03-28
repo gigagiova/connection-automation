@@ -1,11 +1,12 @@
+import json
 import time
-import re
 
 from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.common.by import By
 
 from assets import fb_connection
 from driver import driver
+from regex import group_user_regex
 
 
 def login():
@@ -13,11 +14,18 @@ def login():
 
     driver.get("https://www.facebook.com/")
 
-    email = driver.find_element(By.ID, "email")
-    email.send_keys("francesco.bruno.cia@gmail.com")
+    # fetch credentials from JSON file
+    cf = open("persistent/credentials.JSON", "r")
+    credentials = json.loads(cf.read())
+    cf.close()
 
+    # fill email
+    email = driver.find_element(By.ID, "email")
+    email.send_keys(credentials["email"])
+
+    # fill password
     password = driver.find_element(By.ID, "pass")
-    password.send_keys("Gigagiova")
+    password.send_keys(credentials["password"])
 
     driver.implicitly_wait(5)
     driver.find_element(By.XPATH, "//button[@title='Only allow essential cookies']").click()
@@ -30,6 +38,9 @@ def scroll_down():
 
     # Get scroll height.
     last_height = driver.execute_script("return document.body.scrollHeight")
+
+    # how many time we scrolled
+    counter = 0
 
     while True:
 
@@ -101,12 +112,11 @@ def scrape_group(url, group_name):
     driver.get(url)
     scroll_down()
 
-    r = re.compile(r'https://www.facebook.com/groups/\d+/user/\d+/')
     anchors = map(lambda a: str(a.get_attribute("href")), driver.find_elements(By.TAG_NAME, "a"))
-    profiles = set([a for a in anchors if r.match(a)])
+    profiles = set([a for a in anchors if group_user_regex.match(a)])
     print(f"Found {len(profiles)} profiles")
 
-    history = open("history.txt", "a+")
+    history = open("persistent/history.txt", "a+")
     for p in profiles:
         send_message(p, group_name, history)
 
