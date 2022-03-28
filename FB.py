@@ -33,6 +33,13 @@ def login():
     time.sleep(2)
 
 
+def scrape_members():
+    # scrapes all available members
+    anchors = map(lambda a: str(a.get_attribute("href")), driver.find_elements(By.TAG_NAME, "a"))
+    profiles = set([a for a in anchors if group_user_regex.match(a)])
+    print(f"Found {len(profiles)} profiles")
+
+
 def scroll_down():
     """A method for scrolling the page."""
 
@@ -46,6 +53,11 @@ def scroll_down():
 
         # Scroll down to the bottom.
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        counter += 1
+
+        # when we buffered 250 or more people
+        if counter >= 25:
+            counter -= 25
 
         # Wait to load the page.
         time.sleep(1)
@@ -101,20 +113,14 @@ def send_message(receiver, group_name, history):
     actions.perform()
 
     # save uuid
-    history.write(uuid+"\n")
+    history.write(uuid + "\n")
 
 
 def scrape_group(url, group_name):
-
     driver.get(url)
     scroll_down()
-
-    anchors = map(lambda a: str(a.get_attribute("href")), driver.find_elements(By.TAG_NAME, "a"))
-    profiles = set([a for a in anchors if group_user_regex.match(a)])
-    print(f"Found {len(profiles)} profiles")
 
     history = open("persistent/history.txt", "a+")
     for p in profiles: send_message(p, group_name, history)
 
     history.close()
-
