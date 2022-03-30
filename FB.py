@@ -18,6 +18,8 @@ class FbAccount:
     def __init__(self, account):
         """Login into facebook"""
 
+        self.account = account
+
         self.driver = webdriver.Chrome(
             service=Service("C:/utility/chromedriver_win32/chromedriver.exe"),
             options=options)
@@ -165,7 +167,7 @@ class FbAccount:
         new_profiles = set(map(lambda url: url.split("/")[-2], profiles - previous_batches))
         # exclude previously connected profiles
         unconnected_profiles = new_profiles - set(history.read().splitlines())
-        print(f"Found {len(unconnected_profiles)} new profiles out of {len(profiles)}")
+        print(f"Found {len(unconnected_profiles)} new profiles out of {len(profiles)} using {self.account}")
 
         # close history file
         history.close()
@@ -184,11 +186,13 @@ class FbAccount:
         message_counter = 0
 
         for i, p in enumerate(profiles):
-            print(f"\r{i + 1} out of {len(profiles)}", end="")
+            print(f"\r{i + 1} out of {len(profiles)} [ https://www.facebook.com/{p} ]", end="")
+
+            # saves uuid, even if we fail to send
+            history.write(p + "\n")
+
             if self.send_message(p, message_seed, group_name):
                 message_counter += 1
-                # saves uuid
-                history.write(p + "\n")
 
             if message_counter == BATCH:
                 # pauses if we surpassed the threshold

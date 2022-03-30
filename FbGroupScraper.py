@@ -21,15 +21,10 @@ class FbGroupScraper:
             acc = account_index % len(self.accounts)
 
             # scrapes the next batch, always using the same profile for simplicity
-            output = self.accounts[0].scrape_batch(
-                self.name,
-                self.url,
-                self.previous_batches,
-                f"fb_connection_{self.lang}"
-            )
+            output = self.accounts[0].scrape_batch(self.url, self.previous_batches)
 
             # actually sends the messages
-            self.accounts[acc].send_batch(output[0])
+            self.accounts[acc].send_batch(output[0], f"fb_connection_{self.lang}", self.name)
             self.previous_batches.update(output[0])
 
             if output[1]:
