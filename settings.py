@@ -1,1 +1,2 @@
 SCROLLS = 3
+BATCH = 30

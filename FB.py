@@ -7,10 +7,10 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 
-from assets import fb_connection
+from messages import fb_connection_ita, fb_connection_en
 from options import options
 from regex import group_user_regex
-from settings import SCROLLS
+from settings import SCROLLS, BATCH
 
 
 class FbAccount:
@@ -41,21 +41,24 @@ class FbAccount:
         self.driver.find_element(By.NAME, "login").click()
         time.sleep(2)
 
-    def send_message(self, receiver, group_name="lol"):
+    def send_message(self, receiver, message, group_name="lol"):
         """
         ARGS
             receiver: URL string of receiver's FB account,
             group_name: the name of the group
         """
 
-        # connect to page
+        # connects to page
         self.driver.get(f"https://www.facebook.com/{receiver}")
-        time.sleep(12 + random.randrange(12))
+
+        # waits for the page to load
+        time.sleep(4 + random.randrange(4))
+
+        # starts actions to message
         actions = ActionChains(self.driver)
 
         # get all buttons that contain the word message
         message_buttons = self.driver.find_elements(By.XPATH, "//span[contains(text(), 'Message')]")
-        time.sleep(12 + random.randrange(12))
 
         # You can't send messages to your own profile
         if len(message_buttons) == 0:
@@ -63,16 +66,29 @@ class FbAccount:
 
         # click on message form
         message_buttons[0].find_element(By.XPATH, '../..').click()
+
+        # random pause
+        time.sleep(12 + random.randrange(12))
+
+        # checks if we received a seed
+        if message == "fb_connection_ita":
+            message = fb_connection_ita(group_name)
+        if message == "fb_connection_en":
+            message = fb_connection_en(group_name)
+
+        # inputs message
+        actions.send_keys(message)
+        actions.perform()
+
+        # random pause to wait for keys
         time.sleep(2 + random.randrange(2))
 
-        # send message
-        actions.send_keys(fb_connection(group_name))
-        time.sleep(2 + random.randrange(2))
-        actions.perform()
+        # sends message
         actions.send_keys(Keys.ENTER)
         actions.perform()
 
-        time.sleep(30 + random.randrange(30))
+        # random pause
+        time.sleep(45 + random.randrange(45))
         return True
 
     def scroll_down(self, times):
@@ -85,7 +101,15 @@ class FbAccount:
             # Wait to load the page.
             time.sleep(3)
 
-    def scrape_batch(self, name, link, previous_batches):
+    def scrape_batch(self, link, previous_batches):
+
+        """
+        Function to send messages to members found after scrolling for a set amount of times
+
+        :param link: link of the group's member page
+        :param previous_batches: set of previously contacted people
+        :return: newly connected profiles, completed boolean
+        """
 
         # if we are not in the group's member page
         if self.driver.current_url != link:
@@ -113,13 +137,14 @@ class FbAccount:
                 # this snippet is made to prevent stopping before the page is actually fully loaded
 
                 for t in range(8):
+                    # in case loading time is slow, we wait for a refresh
                     time.sleep(1)
                     new_height = self.driver.execute_script("return document.body.scrollHeight")
                     if last_height != new_height:
                         break
 
                 if last_height == new_height:
-                    # we are done
+                    # after 8 seconds the page didn't load new members, so we are done
                     completed = True
                     break
 
@@ -128,7 +153,7 @@ class FbAccount:
         # executes batch...
 
         # open uuid history
-        history = open("persistent/history.txt", "a+")
+        history = open("persistent/history.txt", "r")
         history.seek(0)
 
         # scrapes all available members
@@ -142,21 +167,30 @@ class FbAccount:
         unconnected_profiles = new_profiles - set(history.read().splitlines())
         print(f"Found {len(unconnected_profiles)} new profiles out of {len(profiles)}")
 
+        # close history file
+        history.close()
+        return unconnected_profiles, completed
+
+    def send_batch(self, profiles, message_seed, group_name):
+
+        # open uuid history to update
+        history = open("persistent/history.txt", "a+")
+
         # open new tab to write messages
         self.driver.execute_script("window.open()")
         self.driver.switch_to.window(self.driver.window_handles[1])
 
-        # how many messages we sent at one
+        # how many messages we sent
         message_counter = 0
 
-        for i, p in enumerate(unconnected_profiles):
-            print(f"\r{i + 1} out of {len(unconnected_profiles)}", end="")
-            if self.send_message(p, name):
+        for i, p in enumerate(profiles):
+            print(f"\r{i + 1} out of {len(profiles)}", end="")
+            if self.send_message(p, message_seed, group_name):
                 message_counter += 1
                 # saves uuid
                 history.write(p + "\n")
 
-            if message_counter == 30:
+            if message_counter == BATCH:
                 # pauses if we surpassed the threshold
                 print(f"\rsleeping...", end="")
                 message_counter = 0
@@ -171,4 +205,3 @@ class FbAccount:
 
         # close history file
         history.close()
-        return new_profiles, completed
