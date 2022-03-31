@@ -33,8 +33,9 @@ while True:
         group_scraper.start()
 
     elif re.compile(r'login .+').match(command):
-        slug = command.split(' ')[1]
-        accounts[slug] = FbAccount(slug)
+        for slug in command.split(' ')[1:]:
+            accounts[slug] = FbAccount(slug)
+        print("login completed")
     elif re.compile(r'logout .+').match(command):
         slug = command.split(' ')[1]
         accounts.pop(slug)
