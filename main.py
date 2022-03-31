@@ -1,3 +1,4 @@
+import json
 import re
 
 from FB import FbAccount
@@ -18,18 +19,14 @@ while True:
 
     if command == "quit":
         break
-    elif command == "group":
-        link = input("Write group link: ")
+    elif re.compile(r'group .+').match(command):
+        # fetch group data from JSON file
+        file = open("persistent/groups.json", "r")
+        # fetch this group from file
+        group = json.loads(file.read())[command.split(' ')[1]]
+        file.close()
 
-        # check syntax of the link
-        if not group_regex.match(link):
-            print("group link seems broken")
-            continue
-
-        name = input("Write group name: ")
-        lang = input("Message language (ita or en): ")
-
-        group_scraper = FbGroupScraper(link, name, accounts, lang)
+        group_scraper = FbGroupScraper(group["link"], group["name"], accounts, group["lang"])
         group_scraper.start()
 
     elif re.compile(r'login .+').match(command):

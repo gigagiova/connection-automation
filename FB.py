@@ -26,7 +26,7 @@ class FbAccount:
         self.driver.get("https://www.facebook.com/")
 
         # fetch credentials from JSON file
-        cf = open("persistent/credentials.JSON", "r")
+        cf = open("persistent/credentials.json", "r")
         credentials = json.loads(cf.read())[account]
         cf.close()
 
