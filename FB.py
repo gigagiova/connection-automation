@@ -167,7 +167,7 @@ class FbAccount:
         new_profiles = set(map(lambda url: url.split("/")[-2], profiles - previous_batches))
         # exclude previously connected profiles
         unconnected_profiles = new_profiles - set(history.read().splitlines())
-        print(f"Found {len(unconnected_profiles)} new profiles out of {len(profiles)} using {self.account}")
+        print(f"Found {len(unconnected_profiles)} new profiles out of {len(profiles)}")
 
         # close history file
         history.close()
@@ -186,7 +186,7 @@ class FbAccount:
         message_counter = 0
 
         for i, p in enumerate(profiles):
-            print(f"\r{i + 1} out of {len(profiles)} [ https://www.facebook.com/{p} ]", end="")
+            print(f"\r{i + 1} out of {len(profiles)} [ https://www.facebook.com/{p} ] using {self.account}", end="")
 
             # saves uuid, even if we fail to send
             history.write(p + "\n")

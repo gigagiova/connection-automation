@@ -13,6 +13,9 @@ class FbGroupScraper:
     def start(self):
         """A method for scrolling the page."""
 
+        print("Group scraping started")
+
+        # round robin index
         account_index = 0
 
         while True:

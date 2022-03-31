@@ -10,7 +10,7 @@ print("""Commands
         quit: quit execution
         message [from] [to]
         accounts: show all currently logged in accounts
-        login [slug]: login with this slug
+        login [space separated slugs]: login with this slug
         logout [slug]: logout from the account with this slug""")
 
 while True:
@@ -34,6 +34,7 @@ while True:
 
     elif re.compile(r'login .+').match(command):
         for slug in command.split(' ')[1:]:
+            # iterates through all provided account slugs
             accounts[slug] = FbAccount(slug)
         print("login completed")
     elif re.compile(r'logout .+').match(command):
